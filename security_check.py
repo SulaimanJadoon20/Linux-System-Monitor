@@ -10,7 +10,7 @@ console = Console()
 
 
 class SystemMonitor:
-    """Monitor system information using subprocess and display with Rich"""
+    #Monitor system information using subprocess and display with Rich
     
     def __init__(self):
         self.logged_in_users = []
@@ -20,7 +20,7 @@ class SystemMonitor:
         self.network_connections = []
         
     def get_logged_in_users(self):
-        """Get currently logged-in users using who and whoami"""
+        #Get currently logged-in users using who and whoami
         try:
             console.print("[yellow]Fetching logged-in users...[/yellow]")
             
@@ -64,7 +64,7 @@ class SystemMonitor:
             console.print(f"[red]Error in get_logged_in_users: {e}[/red]")
     
     def get_processes(self):
-        """Get ALL running processes using ps"""
+        #Get ALL running processes using ps
         try:
             console.print("[yellow]Fetching ALL processes...[/yellow]")
             
@@ -77,10 +77,10 @@ class SystemMonitor:
             
             lines = ps_result.stdout.strip().split('\n')
             
-            # Get ALL processes without truncation
+            
             process_list = []
             for line in lines[1:]:
-                parts = line.split(maxsplit=10)  # Split into max 11 parts
+                parts = line.split(maxsplit=10)  
                 if len(parts) >= 11:
                     process_list.append({
                         'user': parts[0],
@@ -89,15 +89,14 @@ class SystemMonitor:
                         'mem': parts[3],
                         'vsz': parts[4],
                         'rss': parts[5],
-                        'command': parts[10]  # Full command without truncation
+                        'command': parts[10]  
                     })
             
-            # Sort by CPU usage and GET ALL processes
             self.processes = sorted(
                 process_list,
                 key=lambda x: float(x['cpu']),
                 reverse=True
-            )  # REMOVED [:15] limit - now shows ALL processes
+            )  
             
             console.print(f"[green]Found {len(self.processes)} processes[/green]")
             
@@ -105,7 +104,7 @@ class SystemMonitor:
             console.print(f"[red]Error in get_processes: {e}[/red]")
     
     def get_services(self):
-        """Get ALL services status using systemctl"""
+        #Get ALL services status using systemctl
         try:
             console.print("[yellow]Fetching ALL services...[/yellow]")
             
@@ -136,10 +135,9 @@ class SystemMonitor:
                 for line in lines[:-1]:  # Skip last summary line
                     parts = line.split()
                     if len(parts) >= 2:
-                        service_name = parts[0]  # FULL service name without truncation
+                        service_name = parts[0]  
                         status = parts[1]
                         
-                        # Get running status
                         try:
                             active_result = subprocess.run(
                                 ['systemctl', 'is-active', service_name],
@@ -152,12 +150,11 @@ class SystemMonitor:
                             active_status = "unknown"
                         
                         self.services.append({
-                            'service': service_name,  # FULL service name
+                            'service': service_name, 
                             'enabled': status,
                             'active': active_status
                         })
-                
-                # GET ALL services - REMOVED [:15] limit
+            
                 console.print(f"[green]Found {len(self.services)} services[/green]")
                 
             except Exception as e:
@@ -167,7 +164,7 @@ class SystemMonitor:
             console.print(f"[red]Error in get_services: {e}[/red]")
     
     def get_network_connections(self):
-        """Get network connections using ss command"""
+        #Get network connections using ss command
         try:
             console.print("[yellow]Fetching network connections...[/yellow]")
             
@@ -180,7 +177,7 @@ class SystemMonitor:
             
             lines = ss_result.stdout.strip().split('\n')
             
-            for line in lines[1:]:  # Skip header
+            for line in lines[1:]: 
                 parts = line.split()
                 if len(parts) >= 4:
                     self.network_connections.append({
@@ -206,7 +203,7 @@ class SystemMonitor:
                 
                 lines = netstat_result.stdout.strip().split('\n')
                 
-                for line in lines[2:]:  # Skip header
+                for line in lines[2:]: 
                     parts = line.split()
                     if len(parts) >= 4:
                         self.network_connections.append({
@@ -225,7 +222,7 @@ class SystemMonitor:
             console.print(f"[red]Error in get_network_connections: {e}[/red]")
     
     def create_logged_in_panel(self):
-        """Create top panel showing logged-in users"""
+        #Create top panel showing logged-in users
         panel_table = Table(
             title="Currently Logged-In Users",
             show_header=True,
@@ -258,7 +255,7 @@ class SystemMonitor:
         )
     
     def create_processes_table(self):
-        """Create processes table with ALL processes"""
+        
         table = Table(
             title=f"All Running Processes ({len(self.processes)} total)",
             show_header=True,
@@ -273,7 +270,7 @@ class SystemMonitor:
         table.add_column("MEM%", style="magenta", width=8)
         table.add_column("VSZ", style="blue", width=10)
         table.add_column("RSS", style="blue", width=10)
-        table.add_column("Command", style="green")  # NO WIDTH LIMIT - full command
+        table.add_column("Command", style="green") 
         
         if not self.processes:
             table.add_row("[red]No processes found[/red]", "", "", "", "", "", "")
@@ -286,7 +283,7 @@ class SystemMonitor:
                 proc['mem'],
                 proc['vsz'],
                 proc['rss'],
-                proc['command']  # FULL command
+                proc['command']
             )
         
         return table
@@ -301,7 +298,7 @@ class SystemMonitor:
             title_style="bold white"
         )
         
-        table.add_column("Service Name", style="cyan")  # NO WIDTH LIMIT - full name
+        table.add_column("Service Name", style="cyan") 
         table.add_column("Enabled", style="blue", width=15)
         table.add_column("Active", style="green", width=15)
         
@@ -309,11 +306,11 @@ class SystemMonitor:
             table.add_row("[red]No services found[/red]", "", "")
         
         for service in self.services:
-            # Color code the active status
+            
             active_color = "green" if service['active'] == 'active' else "red"
             
             table.add_row(
-                service['service'],  # FULL service name
+                service['service'], 
                 "[bold blue]" + service['enabled'] + "[/bold blue]",
                 f"[{active_color}]{service['active']}[/{active_color}]"
             )
@@ -321,7 +318,7 @@ class SystemMonitor:
         return table
     
     def create_network_table(self):
-        """Create network connections table"""
+        #Create network connections table
         table = Table(
             title=f"Network Connections ({len(self.network_connections)} Listening Ports)",
             show_header=True,
@@ -365,19 +362,19 @@ class SystemMonitor:
         
         console.print()
         
-        # Display logged-in users panel
+        # Display logged-in users pane
         console.print(self.create_logged_in_panel())
         console.print()
         
-        # Display processes table (FULL)
+        
         console.print(self.create_processes_table())
         console.print()
         
-        # Display services table (FULL)
+    
         console.print(self.create_services_table())
         console.print()
         
-        # Display network table
+    
         console.print(self.create_network_table())
         console.print()
         
@@ -392,7 +389,7 @@ class SystemMonitor:
 
 
 def main():
-    """Main function"""
+    #Main function
     try:
         console.print(
             "[bold cyan]Initializing Linux System Monitor...[/bold cyan]\n"
